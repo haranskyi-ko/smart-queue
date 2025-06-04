@@ -20,3 +20,4 @@ net9.0
 # OS-specific
 .DS_Store
 Thumbs.db
+queue.db
