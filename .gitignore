@@ -1,0 +1,22 @@
+# Збірка та проміжні файли
+bin
+obj
+Debug
+Release
+publish
+
+# Папки IDE
+.vs
+.vscode
+
+# Локальні налаштування
+.user
+.suo
+
+# Цільові фреймворки .NET
+net8.0
+net9.0
+
+# OS-specific
+.DS_Store
+Thumbs.db
