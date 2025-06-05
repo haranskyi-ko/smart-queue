@@ -1,9 +1,16 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using QueueApp.Data;
+using QueueApp.Server.Hubs;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlite("Data Source=queue.db")
+        .EnableSensitiveDataLogging()
+        .LogTo(Console.WriteLine)
+);
 
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
@@ -36,6 +43,7 @@ app.UseRouting();
 
 app.MapRazorPages();
 app.MapControllers();
+app.MapHub<QueueHub>("/queuehub");
 app.MapFallbackToFile("index.html");
 
 app.Run();
