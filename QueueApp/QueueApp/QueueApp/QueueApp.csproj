@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Include="..\QueueApp.Client\Pages\Component.razor" Link="Component.razor" />
+		<None Include="..\QueueApp.Client\Pages\Component.razor" Link="Component.razor" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -17,17 +17,17 @@
 			<StaticWebAssetBasePath></StaticWebAssetBasePath>
 		</ProjectReference>
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.16" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	    <PrivateAssets>all</PrivateAssets>
-	  </PackageReference>
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.5">
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	    <PrivateAssets>all</PrivateAssets>
-	  </PackageReference>
-	  <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.5">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5" />
 	</ItemGroup>
 
 
@@ -38,10 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Migrations\" />
-	  <Folder Include="wwwroot\" />
+		<Folder Include="Migrations\" />
 	</ItemGroup>
-
-
 
 </Project>
