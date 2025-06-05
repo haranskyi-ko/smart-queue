@@ -11,8 +11,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FluentAssertions" Version="8.3.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
 		<ProjectReference Include="..\QueueApp.Client\QueueApp.Client.csproj">
 			<StaticWebAssetBasePath></StaticWebAssetBasePath>
 		</ProjectReference>
