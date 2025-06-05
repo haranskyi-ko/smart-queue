@@ -30,6 +30,7 @@
 	  <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5" />
 	</ItemGroup>
 
+
 	<ItemGroup>
 		<ProjectReference Include="..\QueueApp.Shared\QueueApp.Shared.csproj">
 			<BlazorWebAssemblyEnableLinking>false</BlazorWebAssemblyEnableLinking>
