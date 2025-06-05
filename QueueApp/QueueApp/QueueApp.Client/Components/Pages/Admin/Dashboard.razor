@@ -1,0 +1,51 @@
+﻿@page "/admin"
+@inject HttpClient Http
+@using QueueApp
+
+<h3>Черги</h3>
+
+<a href="/admin/create" class="btn btn-success mb-3">Створити нову чергу</a>
+
+@if (queues == null)
+{
+    <p>Завантаження...</p>
+}
+else if (!queues.Any())
+{
+    <p>Немає створених черг.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Назва</th>
+                <th>Код</th>
+                <th>Дата створення</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var q in queues)
+            {
+                <tr>
+                    <td>@q.Title</td>
+                    <td>@q.UniqueCode</td>
+                    <td>@q.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td>
+                        <a href="/admin/queue/@q.Id" class="btn btn-primary btn-sm">Керувати</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<QueueLink>? queues;
+
+    protected override async Task OnInitializedAsync()
+    {
+        queues = await Http.GetFromJsonAsync<List<QueueLink>>("api/admin/queues");
+    }
+}

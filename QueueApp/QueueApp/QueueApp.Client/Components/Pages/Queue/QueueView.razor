@@ -1,0 +1,145 @@
+﻿@page "/queue/{QueueCode}"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Models.Enums_queue.Models
+@inject NavigationManager Nav
+@inject HttpClient         Http
+@inject IJSRuntime         JS
+
+<h3 class="mb-3">Черга: <span class="text-primary">@QueueTitle</span></h3>
+
+@if (QueueItems is null)
+{
+    <div class="spinner-border" role="status" />
+}
+else
+{
+    @if (!IsUserRegistered)
+    {
+        <RegisterForm QueueCode="@QueueCode" OnRegistered="HandleRegistration" />
+    }
+    else
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Ваш статус:</strong> @UserStatus
+                @if (PositionInLine > 0)
+                {
+                    <span class="ms-3">Позиція&nbsp;#@PositionInLine</span>
+                }
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" @onclick="LeaveQueue">
+                Вийти з черги
+            </button>
+        </div>
+    }
+
+    <h5 class="mt-4 mb-2">Поточна черга (@ActiveCount)</h5>
+
+    @if (!ActiveQueue.Any())
+    {
+        <p>Черга порожня.</p>
+    }
+    else
+    {
+        @foreach (var item in ActiveQueue)
+        {
+            <QueueItemCard Item="@item"
+                           Highlight="@(item.UserId == CurrentUserId)" />
+        }
+    }
+}
+
+@code {
+    /* -------- параметр URL -------- */
+    [Parameter] public string QueueCode { get; set; } = string.Empty;
+
+    /* -------- дані UI -------- */
+    private string           QueueTitle     = "…";
+    private IList<QueueItem> QueueItems     = new List<QueueItem>();
+    private IList<QueueItem> ActiveQueue    => QueueItems
+                                              .Where(i => i.Status is not (QueueStatus.Completed or QueueStatus.Cancelled))
+                                              .ToList();
+    private int              ActiveCount    => ActiveQueue.Count;
+    private bool             IsUserRegistered;
+    private string           UserStatus     = string.Empty;
+    private int              PositionInLine = -1;
+
+    /* -------- ідентифікатор клієнта -------- */
+    private int   CurrentUserId;
+    private const string LS_KEY = "smartqueue_uid";
+
+    /* -------- SignalR + резервний таймер -------- */
+    private HubConnection? hub;
+    private PeriodicTimer? pollTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQueueAsync();
+
+        // ---- SignalR ----
+        hub = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/queuehub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hub.On("QueueUpdated", async () =>
+        {
+            await LoadQueueAsync();
+            StateHasChanged();
+        });
+
+        await hub.StartAsync();
+        await hub.InvokeAsync("JoinQueueGroup", QueueCode);
+
+        // ---- fallback-опитування кожні 30 с ----
+        pollTimer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        _ = Task.Run(async () =>
+        {
+            while (await pollTimer.WaitForNextTickAsync())
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadQueueAsync();
+                    StateHasChanged();
+                });
+            }
+        });
+    }
+
+    private async Task LoadQueueAsync()
+    {
+        // 1. метадані
+        var meta = await Http.GetFromJsonAsync<QueueMetaDto>($"/api/queue/{QueueCode}");
+        QueueTitle = meta?.Title ?? $"Черга {QueueCode}";
+
+        // 2. елементи
+        QueueItems = await Http.GetFromJsonAsync<List<QueueItem>>
+                                   ($"/api/queue/{QueueCode}/items") ?? new();
+
+        // 3. userId з localStorage
+        var uidStr = await JS.InvokeAsync<string>("localStorage.getItem", LS_KEY);
+        int.TryParse(uidStr, out CurrentUserId);
+
+        var mine = ActiveQueue.FirstOrDefault(q => q.UserId == CurrentUserId);
+        IsUserRegistered = mine is not null;
+        UserStatus       = mine?.Status.ToString() ?? string.Empty;
+        PositionInLine   = mine is null ? -1 : ActiveQueue.IndexOf(mine) + 1;
+    }
+
+    private async Task HandleRegistration() => await LoadQueueAsync();
+
+    private async Task LeaveQueue()
+    {
+        // call API to cancel (не показуємо тут код)
+        await JS.InvokeVoidAsync("localStorage.removeItem", LS_KEY);
+        await LoadQueueAsync();
+    }
+
+    private record QueueMetaDto(int Id, string Title, bool AllowMultipleEntries);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hub is not null) await hub.DisposeAsync();
+        if (pollTimer is not null) pollTimer.Dispose();
+    }
+}

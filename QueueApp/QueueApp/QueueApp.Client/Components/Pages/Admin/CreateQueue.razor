@@ -1,0 +1,61 @@
+﻿@page "/admin/create"
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http          // зареєстрований у Program.cs з BaseAddress
+@inject NavigationManager Nav
+
+<h3 class="mb-4">Створення нової черги</h3>
+
+<EditForm Model="@model" OnValidSubmit="CreateAsync" class="card p-4 shadow-sm">
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label class="form-label">Назва черги</label>
+        <InputText class="form-control" @bind-Value="model.Title" />
+    </div>
+
+    <div class="form-check mb-4">
+        <InputCheckbox class="form-check-input" @bind-Value="model.AllowMultipleEntries" />
+        <label class="form-check-label">
+            Дозволити кілька записів від одного користувача
+        </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Створити</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="@(() => Nav.NavigateTo("/admin"))">
+        Скасувати
+    </button>
+</EditForm>
+
+@code {
+    // DTO, що відправляється на API
+    private CreateQueueRequest model = new();
+
+    /// <summary>
+    /// POST /api/admin/queues → якщо успіх - повертаємось на /admin
+    /// </summary>
+    private async Task CreateAsync()
+    {
+        var resp = await Http.PostAsJsonAsync("/api/admin/create", model);
+        if (resp.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/admin");
+            return;
+        }
+
+        // опціональна обробка помилки
+        var text = await resp.Content.ReadAsStringAsync();
+        Console.Error.WriteLine($"Не вдалося створити чергу: {text}");
+    }
+
+    // **Nested class** з DataAnnotations - проще валідувати прямо у формі
+    private sealed class CreateQueueRequest
+    {
+        [Required(ErrorMessage = "Поле «Назва» обов'язкове")]
+        [StringLength(100, ErrorMessage = "Максимум 100 символів")]
+        public string? Title { get; set; }
+
+        public bool AllowMultipleEntries { get; set; } = false;
+    }
+}

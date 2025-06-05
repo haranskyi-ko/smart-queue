@@ -1,0 +1,78 @@
+﻿@page "/admin/queue/{QueueId:int}"
+@inject HttpClient Http
+@using global::Models.Enums_queue.Models
+
+<h3>Керування чергою</h3>
+
+@if (queue == null)
+{
+    <p>Завантаження...</p>
+}
+else
+{
+    <h5>@queue.Title</h5>
+    <p>Код: <code>@queue.UniqueCode</code></p>
+
+    <h4>Користувачі в черзі</h4>
+    @if (items == null || !items.Any())
+    {
+        <p>Черга порожня.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Ім’я</th>
+                    <th>Телефон</th>
+                    <th>Статус</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in items)
+                {
+                    <tr>
+                        <td>@i.User.Name</td>
+                        <td>@i.User.PhoneNumber</td>
+                        <td>@i.Status</td>
+                        <td>
+                            @if (i.Status == QueueStatus.Waiting)
+                            {
+                                <button class="btn btn-warning btn-sm" @onclick="() => ChangeStatus(i.Id, QueueStatus.InService)">Обслуговується</button>
+                            }
+                            else if (i.Status == QueueStatus.InService)
+                            {
+                                <button class="btn btn-success btn-sm" @onclick="() => ChangeStatus(i.Id, QueueStatus.Completed)">Завершено</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public int QueueId { get; set; }
+
+    private QueueLink? queue;
+    private List<QueueItem> items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        queue = await Http.GetFromJsonAsync<QueueLink>($"/api/admin/queue/{QueueId}");
+        items = await Http.GetFromJsonAsync<List<QueueItem>>($"/api/admin/queue/{QueueId}/items");
+    }
+
+    private async Task ChangeStatus(int itemId, QueueStatus newStatus)
+    {
+        var res = await Http.PutAsJsonAsync($"/api/admin/queue/item/{itemId}/status", new { Status = newStatus });
+        if (res.IsSuccessStatusCode)
+        {
+            // перезавантажити дані
+            items = await Http.GetFromJsonAsync<List<QueueItem>>($"/api/admin/queue/{QueueId}/items");
+            StateHasChanged();
+        }
+    }
+}
